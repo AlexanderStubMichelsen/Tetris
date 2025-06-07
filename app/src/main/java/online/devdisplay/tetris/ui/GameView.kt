@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.content.Context
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
@@ -15,6 +16,7 @@ import android.graphics.Shader
 import android.view.MotionEvent
 import android.media.MediaPlayer
 import online.devdisplay.tetris.R
+import android.net.Uri
 
 class GameView(context: Context) : View(context) {
     private val paint = Paint()
@@ -378,6 +380,23 @@ class GameView(context: Context) : View(context) {
             fastDropAreaTop + fastDropAreaHeight / 4 * 3,
             textPaint
         )
+
+        // Draw privacy policy link at bottom center
+        val privacyText = "Privacy Policy"
+        val privacyTextPaint = Paint().apply {
+            color = Color.BLUE
+            textSize = baseTextSize * 0.7f // slightly smaller text
+            textAlign = Paint.Align.CENTER
+            isUnderlineText = true
+            setShadowLayer(baseTextSize * 0.05f, 2f, 2f, Color.GRAY)
+        }
+
+// Position the text about 30dp above bottom edge (adjust as needed)
+        val bottomPaddingPx = 30 * resources.displayMetrics.density // convert dp to px
+        val yPos = canvas.height - bottomPaddingPx
+
+        canvas.drawText(privacyText, (canvas.width / 2).toFloat(), yPos, privacyTextPaint)
+
     }
 
     // Method to draw the game over message
@@ -555,6 +574,9 @@ class GameView(context: Context) : View(context) {
         }
     }
 
+    private val baseTextSize: Float
+        get() = height * 0.05f
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -602,15 +624,41 @@ class GameView(context: Context) : View(context) {
                     }
                 }
             }
+
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                // Check if the user tapped the "Privacy Policy" text
+                val privacyText = "Privacy Policy"
+                val paint = Paint().apply {
+                    textSize = baseTextSize * 0.7f // Make sure baseTextSize is accessible here
+                }
+                val textWidth = paint.measureText(privacyText)
+                val bottomPaddingPx = 30 * resources.displayMetrics.density
+                val yPos = height - bottomPaddingPx
+
+                val x = event.x
+                val y = event.y
+
+                val textLeft = (width / 2) - textWidth / 2
+                val textRight = (width / 2) + textWidth / 2
+                val textTop = yPos - paint.textSize
+                val textBottom = yPos
+
+                if (x in textLeft..textRight && y in textTop..textBottom) {
+                    val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://devdisplay.online/privacypolicy"))
+                    context.startActivity(urlIntent)
+                    return true
+                }
+
                 // Stop fast dropping when touch ends
                 isFastDropping = false
                 fastDropHandler.removeCallbacks(fastDropRunnable) // Remove the runnable
             }
         }
+
         invalidate() // Redraw the view
         return true
     }
+
 
     private fun updateLevel(linesCleared: Int) {
         level += linesCleared // Increase level by the number of lines cleared
