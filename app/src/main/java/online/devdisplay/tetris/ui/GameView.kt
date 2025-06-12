@@ -73,7 +73,8 @@ class GameView(context: Context) : View(context) {
 
     private fun updateDropDelay() {
         dropDelay =
-            (1000 / level).coerceAtLeast(100).toLong() // Decrease delay based on level (minimum 100 ms)
+            (1000 / level).coerceAtLeast(100)
+                .toLong() // Decrease delay based on level (minimum 100 ms)
     }
 
     private fun initGameRunnable() {
@@ -117,6 +118,13 @@ class GameView(context: Context) : View(context) {
         drawScore(canvas) // Draw the current score
         drawLevel(canvas) // Draw the current level
     }
+
+
+    private var restartTop = 0f
+    private var restartBottom = 0f
+    private var restartLeft = 0f
+    private var restartRight = 0f
+
 
     private fun drawPauseScreen(canvas: Canvas) {
         // 1. Draw the background gradient
@@ -248,7 +256,25 @@ class GameView(context: Context) : View(context) {
             fastDropAreaTop + fastDropAreaHeight / 4 * 3,
             textPaint
         )
+        // Position for "restart game"
+        val restartTextSize = baseTextSize
+        val restartText = "End Game"
+        val textWidth = labelPaint.measureText(restartText)
+        val restartY = fastDropAreaTop + fastDropAreaHeight / 4 * 4
+
+        restartTop = restartY - restartTextSize
+        restartBottom = restartY
+        restartLeft = (canvas.width / 2) - textWidth / 2
+        restartRight = (canvas.width / 2) + textWidth / 2
+
+        canvas.drawText(
+            restartText,
+            (canvas.width / 2).toFloat(),
+            restartY,
+            labelPaint
+        )
     }
+
 
     private fun drawStartScreen(canvas: Canvas) {
         // 1. Draw the background gradient
@@ -387,7 +413,6 @@ class GameView(context: Context) : View(context) {
             color = Color.BLUE
             textSize = baseTextSize * 0.7f // slightly smaller text
             textAlign = Paint.Align.CENTER
-            isUnderlineText = true
             setShadowLayer(baseTextSize * 0.05f, 2f, 2f, Color.GRAY)
         }
 
@@ -403,8 +428,10 @@ class GameView(context: Context) : View(context) {
     private fun drawGameOverMessage(canvas: Canvas) {
         // 1. Draw the background gradient
         val paint = Paint()
-        val gradient = LinearGradient(0f, 0f, 0f, height.toFloat(),
-            Color.BLUE, Color.CYAN, Shader.TileMode.CLAMP)
+        val gradient = LinearGradient(
+            0f, 0f, 0f, height.toFloat(),
+            Color.BLUE, Color.CYAN, Shader.TileMode.CLAMP
+        )
         paint.shader = gradient
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
 
@@ -472,10 +499,22 @@ class GameView(context: Context) : View(context) {
                     val bottom = top + blockSize
 
                     // Draw filled block
-                    canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), paint)
+                    canvas.drawRect(
+                        left.toFloat(),
+                        top.toFloat(),
+                        right.toFloat(),
+                        bottom.toFloat(),
+                        paint
+                    )
 
                     // Draw border
-                    canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), borderPaint)
+                    canvas.drawRect(
+                        left.toFloat(),
+                        top.toFloat(),
+                        right.toFloat(),
+                        bottom.toFloat(),
+                        borderPaint
+                    )
                 }
             }
         }
@@ -484,7 +523,13 @@ class GameView(context: Context) : View(context) {
         paint.color = Color.BLACK
         paint.style = Paint.Style.FILL
         canvas.drawRect(0f, 0f, offsetX.toFloat(), height.toFloat(), paint)
-        canvas.drawRect((offsetX + gridWidth * blockSize).toFloat(), 0f, width.toFloat(), height.toFloat(), paint)
+        canvas.drawRect(
+            (offsetX + gridWidth * blockSize).toFloat(),
+            0f,
+            width.toFloat(),
+            height.toFloat(),
+            paint
+        )
     }
 
     private fun drawGrid(canvas: Canvas) {
@@ -536,7 +581,8 @@ class GameView(context: Context) : View(context) {
         paint.color = Color.BLACK // Black color for the bottom bar
 
         // Calculate the bottom of the grid in pixels
-        val gridBottom = blockSize * gridHeight // canvas height and grid height are not the same !!!
+        val gridBottom =
+            blockSize * gridHeight // canvas height and grid height are not the same !!!
 
         // Draw the rectangle from the bottom of the grid to the bottom of the screen
         canvas.drawRect(
@@ -578,84 +624,118 @@ class GameView(context: Context) : View(context) {
         get() = height * 0.05f
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x = event.x
+        val y = event.y
+
+        // --- Privacy Policy bounds ---
+        val privacyText = "Privacy Policy"
+        val paint = Paint().apply {
+            textSize = baseTextSize * 0.7f
+        }
+        val textWidth = paint.measureText(privacyText)
+        val bottomPaddingPx = 30 * resources.displayMetrics.density
+        val yPos = height - bottomPaddingPx
+        val textLeft = (width / 2) - textWidth / 2
+        val textRight = (width / 2) + textWidth / 2
+        val textTop = yPos - paint.textSize
+        val textBottom = yPos
+        val isPrivacyClicked = x in textLeft..textRight && y in textTop..textBottom
+
+        // --- Restart Game bounds ---
+        val fastDropAreaTop = (height * (0.1f + 0.15f + 0.25f) + 3 * (height * 0.02f))
+        val fastDropAreaHeight = height * 0.4f
+
+        val restartTextSize = baseTextSize
+        val restartText = "End Game"
+        val restartPaint = Paint().apply {
+            textSize = restartTextSize
+        }
+        val restartTextWidth = restartPaint.measureText(restartText)
+        val restartX = width / 2f
+        val restartY = fastDropAreaTop + fastDropAreaHeight * 0.95f
+        val restartLeft = restartX - restartTextWidth / 2
+        val restartRight = restartX + restartTextWidth / 2
+        val restartTop = restartY - restartTextSize
+        val restartBottom = restartY
+
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                // Handle Pause/Resume button tap
-                val x = event.x
-                val y = event.y
-
-                // Pause button press detection
-                if (y < 150) {
-                    togglePause() // Toggle pause state
+                if (!gameIsStarted && isPrivacyClicked) {
                     return true
                 }
 
-                // Resume press detection (when paused)
-                if (paused) {
-                    togglePause() // Resume the game
-                    return true
-                }
-
-                // If game is over, restart the game
-                if (gameOver) {
-                    resetGame() // Restart game if game over
-                    return true
-                }
-
+                // Game not started yet
                 if (!gameIsStarted) {
                     gameIsStarted = true
-                    handler.post(gameRunnable) // Start the game loop
-                    invalidate() // Redraw the view
+                    handler.post(gameRunnable)
+                    invalidate()
                     return true
                 }
 
-                // Handle touch events for other buttons
-                if (y > 220 && y < height * 2 / 6) {
-                    rotateTetromino() // Rotate Tetromino
-                } else if (y > height * 4 / 6) {
-                    isFastDropping = true
-                    fastDropHandler.post(fastDropRunnable) // Start fast drop
-                } else {
-                    // Move left or right based on touch position
-                    if (x < width / 2 && y > height * 2 / 6 && y < height * 4 / 6) {
-                        moveLeft()
-                    } else if (x > width / 2 && y > height * 2 / 6 && y < height * 4 / 6) {
-                        moveRight()
+                if (!paused) {
+                    when {
+                        y > 220 && y < height * 2 / 6 -> rotateTetromino()
+                        y > height * 2 / 6 && y < height * 4 / 6 -> {
+                            if (x < width / 2) moveLeft() else moveRight()
+                        }
+
+                        y > height * 4 / 6 -> {
+                            isFastDropping = true
+                            fastDropHandler.post(fastDropRunnable)
+                        }
                     }
                 }
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                // Check if the user tapped the "Privacy Policy" text
-                val privacyText = "Privacy Policy"
-                val paint = Paint().apply {
-                    textSize = baseTextSize * 0.7f // Make sure baseTextSize is accessible here
+                // Stop fast drop
+                if (isFastDropping) {
+                    isFastDropping = false
+                    fastDropHandler.removeCallbacks(fastDropRunnable)
                 }
-                val textWidth = paint.measureText(privacyText)
-                val bottomPaddingPx = 30 * resources.displayMetrics.density
-                val yPos = height - bottomPaddingPx
 
-                val x = event.x
-                val y = event.y
-
-                val textLeft = (width / 2) - textWidth / 2
-                val textRight = (width / 2) + textWidth / 2
-                val textTop = yPos - paint.textSize
-                val textBottom = yPos
-
-                if (x in textLeft..textRight && y in textTop..textBottom) {
-                    val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://devdisplay.online/privacypolicy"))
+                // Privacy Policy link
+                if (!gameIsStarted && isPrivacyClicked) {
+                    val urlIntent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://devdisplay.online/privacypolicy")
+                    )
                     context.startActivity(urlIntent)
                     return true
                 }
 
-                // Stop fast dropping when touch ends
-                isFastDropping = false
-                fastDropHandler.removeCallbacks(fastDropRunnable) // Remove the runnable
+                if (paused) {
+                    if (x in restartLeft..restartRight && y in restartTop..restartBottom) {
+                        gameOver = true // Set the game over flag
+                        onGameOver() // Handle game over logic
+                    } else {
+                        togglePause() // resume game
+                    }
+                    return true
+                }
+
+                // Pause game if tapped top of screen
+                if (y < 150) {
+                    togglePause()
+                    return true
+                }
+
+                // Restart from game over
+                if (gameOver) {
+                    resetGame()
+                    gameOver = false
+                    gameIsStarted = true
+                    handler.post(gameRunnable)
+                    return true
+                }
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                // Optional: drag/gesture logic
             }
         }
 
-        invalidate() // Redraw the view
+        invalidate()
         return true
     }
 
@@ -678,8 +758,8 @@ class GameView(context: Context) : View(context) {
             TetrominoType.J -> Color.BLUE
             TetrominoType.L -> Color.rgb(255, 165, 0) // Custom orange color for L
         }
-                val newTetromino = TETROMINOS[newType]?.copy(color = color, xPos = 6, yPos = 0)
-                ?: throw IllegalStateException("Tetromino type $newType not found in TETROMINOS map.")
+        val newTetromino = TETROMINOS[newType]?.copy(color = color, xPos = 6, yPos = 0)
+            ?: throw IllegalStateException("Tetromino type $newType not found in TETROMINOS map.")
 
         // Check for game over condition
         if (isGameOver(newTetromino)) {
@@ -873,4 +953,11 @@ class GameView(context: Context) : View(context) {
         tetromino = getNextTetromino() // Get the first Tetromino
         updateDropDelay() // Reset the drop delay
     }
+
+    fun pauseIfRunning() {
+        if (!paused && gameIsStarted && !gameOver) {
+            togglePause()
+        }
+    }
 }
+
