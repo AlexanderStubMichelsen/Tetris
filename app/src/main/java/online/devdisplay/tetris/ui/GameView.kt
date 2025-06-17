@@ -17,6 +17,11 @@ import android.view.MotionEvent
 import android.media.MediaPlayer
 import online.devdisplay.tetris.R
 import android.net.Uri
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import online.devdisplay.tetris.model.HighScore
 
 class GameView(context: Context) : View(context) {
     private val paint = Paint()
@@ -43,6 +48,9 @@ class GameView(context: Context) : View(context) {
     private var gameIsStarted = false // Track whether the game has started
     private var gameOver = false
     private var paused = false  // Track whether the game is paused
+
+    private val topScores = mutableListOf<HighScore>() // List to hold top scores
+    private var scoresLoaded = false
 
     // Game loop handler
     private val handler = Handler(Looper.getMainLooper())
@@ -458,6 +466,30 @@ class GameView(context: Context) : View(context) {
         canvas.drawText("Level: $level", (canvas.width / 2).toFloat(), baseY, textPaint)
         baseY += lineSpacing // Move down for the next line
         canvas.drawText("Tap to restart", (canvas.width / 2).toFloat(), baseY, textPaint)
+
+        // 🔹 Show top scores
+        if (scoresLoaded) {
+            val textPaint = Paint().apply {
+                color = Color.WHITE
+                textSize = 60f
+                textAlign = Paint.Align.CENTER
+                setShadowLayer(10f, 5f, 5f, Color.BLACK)
+            }
+
+            var baseY = (canvas.height / 2f) + 400f
+            canvas.drawText("Top Scores:", (canvas.width / 2f), baseY, textPaint)
+            baseY += 100f
+
+            for (hs in topScores) {
+                canvas.drawText(
+                    "${hs.playerName}: ${hs.score}",
+                    (canvas.width / 2f),
+                    baseY,
+                    textPaint
+                )
+                baseY += 80f
+            }
+        }
     }
 
     private fun drawLevel(canvas: Canvas) {
@@ -890,6 +922,8 @@ class GameView(context: Context) : View(context) {
     }
 
     private fun onGameOver() {
+        saveHighScore("Player", score) // Save the high score with a placeholder name
+        fetchTopHighScores() // Fetch high scores from Firebase
         gameOver = true // Set the gameOver flag
         handler.removeCallbacks(gameRunnable) // Stop the game loop
         playGameOverSound(context) // Play the game over sound
@@ -959,5 +993,39 @@ class GameView(context: Context) : View(context) {
             togglePause()
         }
     }
+
+private fun saveHighScore(name: String, score: Int) {
+    val db = FirebaseDatabase.getInstance()
+    val scoresRef = db.getReference("highscores")
+    val key = scoresRef.push().key ?: return // Generate a unique key for the new score
+    val hs = HighScore(name, score)
+    scoresRef.child(key).setValue(hs)
+
+}
+
+private fun fetchTopHighScores() {
+    val ref = FirebaseDatabase.getInstance().getReference("highscores")
+    ref.orderByChild("score").limitToLast(5)
+        .addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val list = mutableListOf<HighScore>()
+                for (child in snapshot.children) {
+                    val hs = child.getValue(HighScore::class.java)
+                    if (hs != null) list.add(hs)
+                }
+                list.sortByDescending { it.score }
+                topScores.clear()
+                topScores.addAll(list)
+                scoresLoaded = true
+                postInvalidate() // Redraw canvas
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Log or handle error
+            }
+        })
+}
+
+// Your existing drawGameOverMessage(...) method goes here
 }
 

@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "75745193603",
+    "firebase_url": "https://tetris-ca34c-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "tetris-ca34c",
+    "storage_bucket": "tetris-ca34c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:75745193603:android:94f14760efb418b278f5b6",
+        "android_client_info": {
+          "package_name": "com.example.tetris"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfn8cPZIpAMSQGIUTPDRils0ZGfALLBAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:75745193603:android:183d92b70ed9329c78f5b6",
+        "android_client_info": {
+          "package_name": "online.devdisplay.tetris"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfn8cPZIpAMSQGIUTPDRils0ZGfALLBAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
