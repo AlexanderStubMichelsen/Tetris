@@ -12,8 +12,8 @@ android {
         applicationId = "online.devdisplay.tetris"
         minSdk = 24
         targetSdk = 34
-        versionCode = 35
-        versionName = "3.5"
+        versionCode = 45
+        versionName = "4.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -59,6 +59,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.firebase:firebase-database:21.0.0")
+    implementation ("com.google.firebase:firebase-auth:22.3.0")
+    implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

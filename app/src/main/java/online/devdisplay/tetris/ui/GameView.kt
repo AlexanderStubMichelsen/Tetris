@@ -43,6 +43,7 @@ class GameView(context: Context) : View(context) {
     private var dropDelay: Long = 1000 // Initial delay for dropping the Tetromino
 
     // Score variables
+    private var playerName: String = "Player"
     private var score = 0 // Initialize the score
     private var level = 1 // Initialize the level
     private var gameIsStarted = false // Track whether the game has started
@@ -476,7 +477,7 @@ class GameView(context: Context) : View(context) {
                 setShadowLayer(10f, 5f, 5f, Color.BLACK)
             }
 
-            var baseY = (canvas.height / 2f) + 400f
+            baseY += lineSpacing - 100f // Move down for the next line
             canvas.drawText("Top Scores:", (canvas.width / 2f), baseY, textPaint)
             baseY += 100f
 
@@ -489,6 +490,15 @@ class GameView(context: Context) : View(context) {
                 )
                 baseY += 80f
             }
+        } else {
+            // If scores are not loaded, show a loading message
+            val loadingPaint = Paint().apply {
+                color = Color.WHITE
+                textSize = 60f
+                textAlign = Paint.Align.CENTER
+                setShadowLayer(10f, 5f, 5f, Color.BLACK)
+            }
+            canvas.drawText("Loading top scores...", (canvas.width / 2).toFloat(), baseY, loadingPaint)
         }
     }
 
@@ -695,6 +705,12 @@ class GameView(context: Context) : View(context) {
                 if (!gameIsStarted && isPrivacyClicked) {
                     return true
                 }
+
+                if (!gameIsStarted && event.action == MotionEvent.ACTION_DOWN) {
+                    showNameInputDialog()
+                    return true
+                }
+
 
                 // Game not started yet
                 if (!gameIsStarted) {
@@ -922,7 +938,7 @@ class GameView(context: Context) : View(context) {
     }
 
     private fun onGameOver() {
-        saveHighScore("Player", score) // Save the high score with a placeholder name
+        saveHighScore(playerName, score) // Save the high score with a placeholder name
         fetchTopHighScores() // Fetch high scores from Firebase
         gameOver = true // Set the gameOver flag
         handler.removeCallbacks(gameRunnable) // Stop the game loop
@@ -994,17 +1010,17 @@ class GameView(context: Context) : View(context) {
         }
     }
 
-private fun saveHighScore(name: String, score: Int) {
+private fun saveHighScore(name: String, score: Int, timestamp: Long = System.currentTimeMillis()) {
     val db = FirebaseDatabase.getInstance()
-    val scoresRef = db.getReference("highscores")
+    val scoresRef = db.getReference("high_scores")
     val key = scoresRef.push().key ?: return // Generate a unique key for the new score
-    val hs = HighScore(name, score)
+    val hs = HighScore(name, score, timestamp)
     scoresRef.child(key).setValue(hs)
 
 }
 
 private fun fetchTopHighScores() {
-    val ref = FirebaseDatabase.getInstance().getReference("highscores")
+    val ref = FirebaseDatabase.getInstance().getReference("high_scores")
     ref.orderByChild("score").limitToLast(5)
         .addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -1013,6 +1029,7 @@ private fun fetchTopHighScores() {
                     val hs = child.getValue(HighScore::class.java)
                     if (hs != null) list.add(hs)
                 }
+                android.util.Log.d("GameView", "Loaded highscores: ${list.size}")
                 list.sortByDescending { it.score }
                 topScores.clear()
                 topScores.addAll(list)
@@ -1026,6 +1043,21 @@ private fun fetchTopHighScores() {
         })
 }
 
-// Your existing drawGameOverMessage(...) method goes here
+    private fun showNameInputDialog() {
+        val editText = android.widget.EditText(context)
+        editText.hint = "Enter your name"
+        android.app.AlertDialog.Builder(context)
+            .setTitle("Player Name")
+            .setView(editText)
+            .setCancelable(false)
+            .setPositiveButton("OK") { _, _ ->
+                playerName = editText.text.toString().ifBlank { "Player" }
+                gameIsStarted = true
+                handler.post(gameRunnable)
+                invalidate()
+            }
+            .show()
+    }
+
 }
 
