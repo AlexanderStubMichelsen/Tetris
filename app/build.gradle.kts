@@ -12,8 +12,8 @@ android {
         applicationId = "online.devdisplay.tetris"
         minSdk = 24
         targetSdk = 34
-        versionCode = 45
-        versionName = "4.5"
+        versionCode = 50
+        versionName = "5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
