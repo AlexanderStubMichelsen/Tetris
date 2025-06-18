@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_gradient"
+    android:padding="24dp">
+
+    <!-- res/drawable/dialog_gradient.xml -->
+    <EditText
+        android:id="@+id/editTextPlayerName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your name"
+        android:textSize="18sp"
+        android:background="@drawable/edittext_bg"
+        android:padding="16dp"/>
+</FrameLayout>

@@ -1044,11 +1044,13 @@ private fun fetchTopHighScores() {
 }
 
     private fun showNameInputDialog() {
-        val editText = android.widget.EditText(context)
-        editText.hint = "Enter your name"
+        val inflater = android.view.LayoutInflater.from(context)
+        val dialogView = inflater.inflate(R.layout.dialog_player_name, null)
+        val editText = dialogView.findViewById<android.widget.EditText>(R.id.editTextPlayerName)
+
         android.app.AlertDialog.Builder(context)
             .setTitle("Player Name")
-            .setView(editText)
+            .setView(dialogView)
             .setCancelable(false)
             .setPositiveButton("OK") { _, _ ->
                 playerName = editText.text.toString().ifBlank { "Player" }
