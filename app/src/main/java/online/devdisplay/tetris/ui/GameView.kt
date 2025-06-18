@@ -3,6 +3,7 @@ package online.devdisplay.tetris.ui
 import TETROMINOS
 import Tetromino
 import TetrominoType
+import android.app.AlertDialog
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -1048,8 +1049,7 @@ private fun fetchTopHighScores() {
         val dialogView = inflater.inflate(R.layout.dialog_player_name, null)
         val editText = dialogView.findViewById<android.widget.EditText>(R.id.editTextPlayerName)
 
-        android.app.AlertDialog.Builder(context)
-            .setTitle("Player Name")
+        val dialog = AlertDialog.Builder(context)
             .setView(dialogView)
             .setCancelable(false)
             .setPositiveButton("OK") { _, _ ->
@@ -1058,7 +1058,13 @@ private fun fetchTopHighScores() {
                 handler.post(gameRunnable)
                 invalidate()
             }
-            .show()
+            .create()
+
+        dialog.show()
+
+        dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_gradient)
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(Color.parseColor("#151614"))
+
     }
 
 }

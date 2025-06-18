@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:background="@drawable/dialog_gradient"
     android:padding="24dp">
 
-    <!-- res/drawable/dialog_gradient.xml -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Player Name"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="12dp" />
+
     <EditText
         android:id="@+id/editTextPlayerName"
         android:layout_width="match_parent"
@@ -13,5 +24,7 @@
         android:hint="Enter your name"
         android:textSize="18sp"
         android:background="@drawable/edittext_bg"
-        android:padding="16dp"/>
-</FrameLayout>
+        android:padding="16dp"
+        android:textColor="#000000"
+        android:textColorHint="#AAAAAA" />
+</LinearLayout>
