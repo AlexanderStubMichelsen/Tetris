@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "online.devdisplay.tetris"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "online.devdisplay.tetris"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 50
-        versionName = "5.0"
+        targetSdk = 35
+        versionCode = 55
+        versionName = "5.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
